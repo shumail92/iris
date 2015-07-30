@@ -28,7 +28,7 @@ namespace gl = glue;
 
 class flicker_wnd : public gl::window {
 public:
-    flicker_wnd(const iris::data::rgb2lms &rgb2lms, const std::vector<double> &stimuli);
+    flicker_wnd(const iris::data::rgb2lms &rgb2lms, const std::vector<double> &stimuli, int refresh);
     void render();
 
     virtual void key_event(int key, int scancode, int action, int mods) override;
@@ -70,6 +70,8 @@ private:
 
     double clock;
     bool draw_stim;
+    int refresh;
+    int nframes;
 
     gl::point cursor;
     float mouse_gain;
@@ -79,10 +81,10 @@ private:
     std::vector<double> resp;
 };
 
-flicker_wnd::flicker_wnd(const iris::data::rgb2lms &rgb2lms, const std::vector<double> &stimuli)
+flicker_wnd::flicker_wnd(const iris::data::rgb2lms &rgb2lms, const std::vector<double> &stimuli, int refresh)
         : window(rgb2lms.dsy, "iris - isoslant"),
           dkl(rgb2lms.dkl_params, iris::rgb::gray(rgb2lms.gray_level)),
-          phi(stimuli) {
+          phi(stimuli), refresh(refresh), nframes(0) {
 
     make_current_context();
     glfwSwapInterval(1);
@@ -140,14 +142,20 @@ void flicker_wnd::update_label() {
 }
 
 void flicker_wnd::render() {
-    double now = glfwGetTime();
-    double delta = now - clock;
-    bool flip = delta > 0.05;
+    nframes++;
+
+    if (nframes == 20*refresh) {
+        nframes = 0;
+    }
+
+    bool flip = false;
+
+    if (nframes % refresh == 0) {
+        draw_stim = !draw_stim;
+        flip = true;
+    }
 
     if (flip) {
-        draw_stim = !draw_stim;
-        clock = now;
-
         glClearColor(gray_level, gray_level, gray_level, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -156,7 +164,6 @@ void flicker_wnd::render() {
         }
 
         progress.draw(px2gl);
-
         swap_buffers();
     }
 
@@ -269,7 +276,14 @@ int main(int argc, char **argv) {
         std::mt19937 rnd_gen(rnd_dev());
         iris::block_shuffle(stim.begin(), stim.end(), N, rnd_gen);
 
-        flicker_wnd wnd(rgb2lms, stim);
+        // figure out how many frames roughly corresponds to 20Hz
+        double rk = mode.refresh / 20.0;
+        int refresh = static_cast<int>(std::round(rk));
+
+        std::cerr << "[I] refresh: " << (mode.refresh / refresh) << " Hz ";
+        std::cerr << " nf: " << refresh << " (" << rk << ")" << std::endl;
+
+        flicker_wnd wnd(rgb2lms, stim, refresh);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

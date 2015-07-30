@@ -100,6 +100,10 @@ target_link_libraries(iris PUBLIC ${LINK_LIBS})
 #######################################
 # tools
 
+set(lpm_SOURCES tools/lpm.cc)
+add_executable(lpm ${lpm_SOURCES})
+target_link_libraries(lpm iris)
+
 set(pr655_SOURCES tools/pr655.cc)
 add_executable(pr655 ${pr655_SOURCES})
 target_link_libraries(pr655 iris)

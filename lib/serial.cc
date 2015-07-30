@@ -149,7 +149,7 @@ std::string serial::recv_line(sleeper::rep read_timeout) {
         }
 
         if (!timeout.maybe_sleep(nread == 0)) {
-            throw std::runtime_error("w failed: timeout");
+            throw std::runtime_error("r failed: timeout");
         }
 
     } while (ch != '\n');

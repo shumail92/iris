@@ -142,6 +142,10 @@ public:
         std::this_thread::sleep_for(dura);
     }
 
+    int printfd() {
+        return fd;
+    }
+
 private:
     int fd;
 };

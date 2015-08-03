@@ -34,22 +34,22 @@ int main(int argc, char **argv) {
 
         std::cout << "Opening device: " << vm["device"].as<std::string>() << std::endl;
 
-        device::io = device::arduino::open(device);
+        device::lpm lpm = device::lpm::open(device);
 
-        std::cout << "val of fd: " << device::io.printfd() << std::endl;
+        std::cout << "val of fd: " << lpm.io.printfd() << std::endl;
         std::cout << "input: " << input << std::endl;
 
-        if(device::lpm::isCommandPWM(input) == 0) {
+        if(lpm.isCommandPWM(input) == 0) {
             // handle PWM
-            device::lpm::setPWM(input);
+            lpm.setPWM(input);
 
-        } else if(device::lpm::isCommandInfo(input) == 0) {
+        } else if(lpm.isCommandInfo(input) == 0) {
             //handle info
-            device::lpm::getInfo();
+            lpm.getInfo();
 
-        } else if(device::lpm::isCommandReset(input) == 0) {
+        } else if(lpm.isCommandReset(input) == 0) {
             //handle reset
-            device::lpm::reset();
+            lpm.reset();
 
         } else {
             std::cout <<"Error: Incorrect command! " << std::endl;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
         }
 
         std::cout  << "from arduino: " << std::endl;
-        device::lpm::receiveArduinoOutput();    //print stream from arduino
+        lpm.receiveArduinoOutput();    //print stream from arduino
 
 
     } else {

@@ -4,54 +4,50 @@
 namespace device {
 
 
-    device::serial io;
-
-    class arduino {
-
-    public:
-
-        static device::serial open(const std::string &path) {
-            return serial::open(path);
-        }
-
-    };
-
-
     class lpm {
 
     public:
 
-        static void setPWM(std::string cmd) {
-            device::io.send_data(cmd);
+        device::serial io;
+
+        lpm(const device::serial &io) : io(io) { }
+
+        static lpm open(const std::string &path) {
+            lpm lpm(serial::open(path));
+            return lpm;
         }
 
-        static void getInfo() {
-            device::io.send_data("info");
+        void setPWM(std::string cmd) {
+            io.send_data(cmd);
         }
 
-        static void reset() {
-            device::io.send_data("reset");
+        void getInfo() {
+            io.send_data("info");
         }
 
-        static int isCommandPWM(std::string cmd) {
+        void reset() {
+            io.send_data("reset");
+        }
+
+        int isCommandPWM(std::string cmd) {
             std::string pwmCmd = "pwm";
             return cmd.compare(0, pwmCmd.length(), pwmCmd);
         }
 
-        static int isCommandInfo(std::string cmd) {
+        int isCommandInfo(std::string cmd) {
             std::string infoCmd = "info";
             return cmd.compare(0, infoCmd.length(), infoCmd);
         }
 
-        static int isCommandReset(std::string cmd) {
+        int isCommandReset(std::string cmd) {
             std::string resetCmd = "reset";
             return cmd.compare(0, resetCmd.length(), resetCmd);
         }
 
-        static void receiveArduinoOutput() {
+        void receiveArduinoOutput() {
 
             while(1) {
-                std::string data = device::io.recv_line(1000);
+                std::string data = io.recv_line(1000);
                 std::cout << data << std::endl;
 
                 if(data == std::string("*")) {

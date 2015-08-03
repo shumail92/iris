@@ -1,59 +1,68 @@
 #include <iostream>
 #include <serial.h>
+
 #include <boost/program_options.hpp>
+
 #include "lpm.h"
 
+// info
+// reset
+// pwm 10,2000
+// shoot
 
 int main(int argc, char **argv) {
+    namespace po = boost::program_options;
 
     std::string device;
-    std::string input2;
-
-    namespace po = boost::program_options;
+    std::string input;
 
     po::options_description opts("LED Pseudo Monochromatic Command Line tool");
     opts.add_options()
             ("help",    "Some help stuff")
             ("device", po::value<std::string>(&device), "device file for aurdrino")
-            ("input", po::value<std::string>(&input2), "send r/g/b");
-
-    std::cout << "setting input2:" << input2 << std::endl;
+            ("input", po::value<std::string>(&input), "send r/g/b");
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(opts).run(), vm);
     po::notify(vm);
 
     if(vm.count("help")) {
+        //show program options
         std::cout << opts << std::endl;
+
     } else if (vm.count("device")) {
+
         std::cout << "Opening device: " << vm["device"].as<std::string>() << std::endl;
 
-        device::serial io = device::arduino::open(device);
+        device::io = device::arduino::open(device);
 
-        std::cout << "val of fd: " << io.printfd() << std::endl;
+        std::cout << "val of fd: " << device::io.printfd() << std::endl;
+        std::cout << "input: " << input << std::endl;
 
-        std:: cout << "input: " << input2 << std::endl;
+        if(device::lpm::isCommandPWM(input) == 0) {
+            // handle PWM
+            device::lpm::setPWM(input);
 
-        if(input2 == "reset") {
-            input2 = "-1,-1";
-            std::cout << "sending: " << input2 << std::endl;
+        } else if(device::lpm::isCommandInfo(input) == 0) {
+            //handle info
+            device::lpm::getInfo();
+
+        } else if(device::lpm::isCommandReset(input) == 0) {
+            //handle reset
+            device::lpm::reset();
+
+        } else {
+            std::cout <<"Error: Incorrect command! " << std::endl;
+            return -1;
         }
 
-        io.send_data(input2);
-        //write(a.printfd(),  &input,  1);
+        std::cout  << "from arduino: " << std::endl;
+        device::lpm::receiveArduinoOutput();    //print stream from arduino
 
-        std::cout  << "from arduino: ";
 
-        while(1) {
-            std::string data = io.recv_line(1000);
-            std::cout << data << std::endl;
-
-            if(data == std::string("*")) {
-                break;
-            }
-        }
     } else {
         std::cout << "Not Enough Arguments. ./lpm --device <device file> --input <input>" << std::endl;
     }
+
     return 0;
 }

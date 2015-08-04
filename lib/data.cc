@@ -276,6 +276,34 @@ display store::make_display(const monitor       &monitor,
     return dsp;
 }
 
+std::map<uint8_t, uint16_t> store::lpm_leds() const {
+
+    std::map<uint8_t, uint16_t> lpm_led_map;
+
+    fs::file valuesFile = base.child("lpm/leds");
+    std::string data = valuesFile.read_all();
+    YAML::Node root = YAML::Load(data);
+
+    YAML::Node led_node = root["leds"];
+
+    for(YAML::const_iterator it = led_node.begin(); it != led_node.end(); it++) {
+        std::string pin_no = it->first.as<std::string>();
+        std::string led_wavelength = it->second.as<std::string>();
+
+        uint8_t pin_int = std::stoi(pin_no);
+        uint16_t pwm_val_int = std::stoi(led_wavelength);
+
+        lpm_led_map.insert( std::pair<uint8_t ,uint16_t >(pin_int, pwm_val_int) );
+    }
+
+    std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
+
+    for(auto elem : lpm_led_map)    {
+        std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "\n";
+    }
+
+    return lpm_led_map;
+}
 
 
 // yaml stuff

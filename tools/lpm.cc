@@ -2,6 +2,7 @@
 #include <serial.h>
 
 #include <boost/program_options.hpp>
+#include <data.h>
 
 #include "lpm.h"
 
@@ -31,6 +32,9 @@ int main(int argc, char **argv) {
         std::cout << opts << std::endl;
 
     } else if (vm.count("device")) {
+
+//        iris::data::store store = iris::data::store::default_store();
+//        store.lpm_leds();
 
         std::cout << "Opening device: " << vm["device"].as<std::string>() << std::endl;
 

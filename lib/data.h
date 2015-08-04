@@ -8,7 +8,7 @@
 #include <dkl.h>
 #include <fs.h>
 #include <spectra.h>
-
+#include <map>
 
 namespace iris {
 namespace data {
@@ -123,7 +123,6 @@ struct isoslant : entity {
     std::string rgb2lms;
 };
 
-
 ///
 
 /* store dir layout:
@@ -164,6 +163,9 @@ public:
 
     // cone fundamentals for calibration
     fs::file cone_fundamentals(size_t spacing = 4) const;
+
+    // the led mapping for the led pseudo monochroma//tor
+    std::map<uint8_t, uint16_t> lpm_leds() const;
 
     // yaml config IO
 

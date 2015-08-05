@@ -95,7 +95,7 @@ file(GLOB_RECURSE lib_INCLUDES lib/*.h lib/*.hpp)
 
 add_definitions(-DHAVE_IRIS)
 add_library(iris SHARED ${lib_INCLUDES} ${lib_SOURCES})
-target_link_libraries(iris PUBLIC ${LINK_LIBS})
+target_link_libraries(iris PUBLIC ${LINK_LIBS} -lboost_system -lboost_thread)
 
 #######################################
 # tools
@@ -103,6 +103,10 @@ target_link_libraries(iris PUBLIC ${LINK_LIBS})
 set(lpm_SOURCES tools/lpm.cc)
 add_executable(lpm ${lpm_SOURCES})
 target_link_libraries(lpm iris)
+
+set(LEDPhotoSpectrum_SOURCES tools/LEDPhotoSpectrum.cc)
+add_executable(iris-LEDPhotoSpectrum ${LEDPhotoSpectrum_SOURCES})
+target_link_libraries(iris-LEDPhotoSpectrum iris)
 
 set(pr655_SOURCES tools/pr655.cc)
 add_executable(pr655 ${pr655_SOURCES})

@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 #include <data.h>
 
-#include "lpm.h"
+#include <lpm.h>
 
 // info
 // reset
@@ -33,9 +33,6 @@ int main(int argc, char **argv) {
 
     } else if (vm.count("device")) {
 
-//        iris::data::store store = iris::data::store::default_store();
-//        store.lpm_leds();
-
         std::cout << "Opening device: " << vm["device"].as<std::string>() << std::endl;
 
         device::lpm lpm = device::lpm::open(device);
@@ -54,6 +51,10 @@ int main(int argc, char **argv) {
         } else if(lpm.isCommandReset(input) == 0) {
             //handle reset
             lpm.reset();
+
+        } else if(lpm.isCommandShoot(input) == 0) {
+            //handle shoot img
+            lpm.shoot();
 
         } else {
             std::cout <<"Error: Incorrect command! " << std::endl;

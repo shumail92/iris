@@ -95,7 +95,7 @@ file(GLOB_RECURSE lib_INCLUDES lib/*.h lib/*.hpp)
 
 add_definitions(-DHAVE_IRIS)
 add_library(iris SHARED ${lib_INCLUDES} ${lib_SOURCES})
-target_link_libraries(iris PUBLIC ${LINK_LIBS} -lboost_system -lboost_thread)
+target_link_libraries(iris PUBLIC ${LINK_LIBS})
 
 #######################################
 # tools

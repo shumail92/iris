@@ -29,6 +29,10 @@ namespace device {
             io.send_data("reset");
         }
 
+        void shoot() {
+            io.send_data("shoot");
+        }
+
         int isCommandPWM(std::string cmd) {
             std::string pwmCmd = "pwm";
             return cmd.compare(0, pwmCmd.length(), pwmCmd);
@@ -42,6 +46,11 @@ namespace device {
         int isCommandReset(std::string cmd) {
             std::string resetCmd = "reset";
             return cmd.compare(0, resetCmd.length(), resetCmd);
+        }
+
+        int isCommandShoot(std::string cmd) {
+            std::string shootCmd = "shoot";
+            return cmd.compare(0, shootCmd.length(), shootCmd);
         }
 
         void receiveArduinoOutput() {

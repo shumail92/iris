@@ -296,12 +296,13 @@ std::map<uint8_t, uint16_t> store::lpm_leds() const {
         lpm_led_map.insert( std::pair<uint8_t ,uint16_t >(pin_int, pwm_val_int) );
     }
 
+    /*
     std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
 
     for(auto elem : lpm_led_map)    {
         std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "\n";
     }
-
+    */
     return lpm_led_map;
 }
 

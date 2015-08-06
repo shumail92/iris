@@ -1,11 +1,10 @@
 #include <iostream>
 #include <serial.h>
-#include <boost/thread.hpp>
 #include <boost/program_options.hpp>
+#include <data.h>
 
-int commandHelper(std::string const& cmd) {
-    return system(cmd.c_str());
-}
+#include <lpm.h>
+#include <pr655.h>
 
 int main(int argc, char **argv) {
 
@@ -30,45 +29,76 @@ int main(int argc, char **argv) {
         std::cout << opts << std::endl;
         return 0;
 
-    } else if(vm.count("arduino") && vm.count("pr655") && vm.count("input")) {
+    } else if(vm.count("arduino") && vm.count("pr655")) {
 
-        std::cout << "Hello IRIS: " << std::endl;
-        std::cout << "main waiting for threads" << std::endl;
+        std::cout << "Opening Arduino Device File" << std::endl;
+        device::lpm lpm = device::lpm::open(arduinoDevFile);    //connect to arduino
 
-        /*
-         * Turn on LED
-         */
-        std::string cmd = "";
-        cmd = "./lpm --device " + arduinoDevFile + " --input \"pwm " + input + "\"" ;
-        boost::thread lpmThread(commandHelper, cmd);
-        sleep(1);
-        lpmThread.join();
+        std::cout << "Opening pr655 Device File" << std::endl;
+        //device::pr655 meter = device::pr655::open(pr655DevFile);  //connect to pr655
 
         /*
-         * Take the picture     (change command after implementing iris camera)
+         * build the <LED Pin, Wavelength> map from YAML Config file
          */
-        cmd = "./lpm --device " + arduinoDevFile + " --input \"pwm " + "5,4096" + "\"" ;
-        boost::thread photographThread(commandHelper, cmd);
-        sleep(1);
-        photographThread.join();
+        iris::data::store store = iris::data::store::default_store();
+        const std::map<uint8_t, uint16_t> ledMap = store.lpm_leds();
 
-        /*
-         * Take the Spectrum    (change command for pr655)
-         */
-        cmd = "./lpm --device " + arduinoDevFile + " --input \"pwm " + "1,4096" + "\"" ;
-        boost::thread pr655Thread(commandHelper, cmd);
-        sleep(1);
-        pr655Thread.join();
+        std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
+        for(auto elem : ledMap)    {
+            std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "nm \n";
+        }
 
-        /*
-         * Reset the LED
-         */
-        cmd = "./lpm --device " + arduinoDevFile + " --input \"reset" + "\"" ;
-        boost::thread lpmResetThread(commandHelper, cmd);
-        sleep(1);
-        lpmResetThread.join();
+        std::cout << std::endl << "Starting Process for all available LEDs..." << std::endl << std::endl;
 
-        std::cout << "All Threads returned -- Main done" << std::endl;
+        for(auto elem : ledMap)    {
+
+            std::cout << "$: Turning on " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << std::endl;
+            std::string pwmCmd = "pwm " + std::to_string(unsigned(elem.first)) + ",4096";
+
+            /*
+             * Turn on LED
+             */
+            lpm.setPWM(pwmCmd);
+            std::cout << "---------------------------------------" << std::endl;
+            std::cout  << "From arduino after turning LED on: " << std::endl;
+            lpm.receiveArduinoOutput();    //print stream from arduino
+            std::cout << "---------------------------------------" << std::endl << std::endl << std::endl ;
+            /*
+             * Time delay of 1 sec
+             */
+            usleep(1000000);
+
+            /*
+             * Take the picture
+             */
+            std::cout << "$: Capturing Photograph from Camera" << std::endl;
+            lpm.shoot();
+            std::cout << "---------------------------------------" << std::endl;
+            std::cout  << "From arduino after taking picture " << std::endl;
+            lpm.receiveArduinoOutput();    //print stream from arduino
+            std::cout << "---------------------------------------" << std::endl << std::endl << std::endl ;
+
+            /*
+             * Measure the Spectrum
+             */
+            std::cout << "$: Measuring the spectrum" << std::endl;
+            // pr655.measure
+
+            /*
+             * Reset the LED
+             */
+            std::cout << "$: Resetting the LED" << std::endl;
+            lpm.reset();
+            std::cout << "---------------------------------------" << std::endl;
+            std::cout  << "From arduino after resetting" << std::endl;
+            lpm.receiveArduinoOutput();    //print stream from arduino
+            std::cout << "---------------------------------------" << std::endl << std::endl << std::endl ;
+
+            /*
+             * Time delay of 1 sec
+             */
+            usleep(1000000);
+        }
 
     } else {
         std::cout << "Not Enough Arguments. call --help for help" << std::endl;

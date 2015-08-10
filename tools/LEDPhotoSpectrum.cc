@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <serial.h>
 #include <boost/program_options.hpp>
 #include <data.h>
@@ -35,7 +36,7 @@ int main(int argc, char **argv) {
         device::lpm lpm = device::lpm::open(arduinoDevFile);    //connect to arduino
 
         std::cout << "Opening pr655 Device File" << std::endl;
-        //device::pr655 meter = device::pr655::open(pr655DevFile);  //connect to pr655
+        device::pr655 meter = device::pr655::open(pr655DevFile);  //connect to pr655
 
         /*
          * build the <LED Pin, Wavelength> map from YAML Config file
@@ -49,6 +50,8 @@ int main(int argc, char **argv) {
         }
 
         std::cout << std::endl << "Starting Process for all available LEDs..." << std::endl << std::endl;
+
+        std::map<uint16_t, spectral_data> spectrumData;
 
         for(auto elem : ledMap)    {
 
@@ -82,7 +85,27 @@ int main(int argc, char **argv) {
              * Measure the Spectrum
              */
             std::cout << "$: Measuring the spectrum" << std::endl;
-            // pr655.measure
+
+            std::string prefix = "# ";
+            try {
+                bool could_start = meter.start();
+                if (! could_start) {
+                    std::cerr << "Could not start remote mode" << std::endl;
+                    meter.stop();
+                    return -1;
+                }
+
+                meter.units(true);
+                meter.measure();
+                device::pr655::cfg config = meter.config();
+                spectral_data data = meter.spectral();
+                spectrumData.insert( std::pair<uint16_t , spectral_data>(elem.second, data) );
+
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
+            }
+
+            meter.stop();
 
             /*
              * Reset the LED
@@ -98,6 +121,34 @@ int main(int argc, char **argv) {
              * Time delay of 1 sec
              */
             usleep(1000000);
+        }
+
+
+        std::ofstream fout("spectral.txt");
+
+        fout << "xx,";
+
+        for(auto elem : spectrumData)    {
+            spectral_data temp = elem.second;
+
+            for (size_t i = 0; i < temp.data.size(); i++) {
+                fout << temp.wl_start + i * temp.wl_step << ",";
+            }
+            break;
+        }
+
+        fout << std::endl;
+
+        for(auto elem : spectrumData)    {
+            fout << unsigned(elem.first) << ",";
+            spectral_data temp = elem.second;
+
+            for (size_t i = 0; i < temp.data.size(); i++) {
+                fout << temp.data[i] << ",";
+            }
+
+            fout << std::endl;
+
         }
 
     } else {

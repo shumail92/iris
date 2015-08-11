@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
         iris::data::store store = iris::data::store::default_store();
         const std::map<uint8_t, uint16_t> ledMap = store.lpm_leds();
 
+        const std::map<uint16_t, uint16_t> ledPwmMap = store.lpm_pwm();
+
         std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
         for(auto elem : ledMap)    {
             std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "nm \n";
@@ -55,8 +57,8 @@ int main(int argc, char **argv) {
 
         for(auto elem : ledMap)    {
 
-            std::cout << "$: Turning on " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << std::endl;
-            std::string pwmCmd = "pwm " + std::to_string(unsigned(elem.first)) + ",4096";
+            std::cout << "$: Turning on " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << " with PWM: " << ledPwmMap.at(elem.second) <<std::endl;
+            std::string pwmCmd = "pwm " + std::to_string(unsigned(elem.first)) + "," + std::to_string(ledPwmMap.at(elem.second)) + "";
 
             /*
              * Turn on LED
@@ -126,7 +128,7 @@ int main(int argc, char **argv) {
 
         std::ofstream fout("spectral.txt");
 
-        fout << "xx,";
+        fout << "led,";
 
         for(auto elem : spectrumData)    {
             spectral_data temp = elem.second;

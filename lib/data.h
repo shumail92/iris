@@ -167,6 +167,9 @@ public:
     // the led mapping for the led pseudo monochroma//tor
     std::map<uint8_t, uint16_t> lpm_leds() const;
 
+    // the pwm mapping for the led pseudo monochroma//tor
+    std::map<uint16_t, uint16_t> lpm_pwm() const;
+
     // yaml config IO
 
     static monitor yaml2monitor(const std::string &data);

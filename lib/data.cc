@@ -280,7 +280,7 @@ std::map<uint8_t, uint16_t> store::lpm_leds() const {
 
     std::map<uint8_t, uint16_t> lpm_led_map;
 
-    fs::file valuesFile = base.child("lpm/leds");
+    fs::file valuesFile = base.child("lpm/pwmLed");
     std::string data = valuesFile.read_all();
     YAML::Node root = YAML::Load(data);
 
@@ -305,6 +305,36 @@ std::map<uint8_t, uint16_t> store::lpm_leds() const {
     */
     return lpm_led_map;
 }
+
+    std::map<uint16_t, uint16_t> store::lpm_pwm() const {
+
+        std::map<uint16_t, uint16_t>lpm_led_map;
+
+        fs::file valuesFile = base.child("lpm/pwm");
+        std::string data = valuesFile.read_all();
+        YAML::Node root = YAML::Load(data);
+
+        YAML::Node led_node = root["pwm"];
+
+        for(YAML::const_iterator it = led_node.begin(); it != led_node.end(); it++) {
+            std::string wavelength = it->first.as<std::string>();
+            std::string led_pwm = it->second.as<std::string>();
+
+            uint16_t wavelength_int = std::stoi(wavelength);
+            uint16_t led_pwm_int = std::stoi(led_pwm);
+
+            lpm_led_map.insert( std::pair<uint16_t ,uint16_t >(wavelength_int, led_pwm_int) );
+        }
+
+        /*
+        std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
+
+        for(auto elem : lpm_led_map)    {
+            std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "\n";
+        }
+        */
+        return lpm_led_map;
+    }
 
 
 // yaml stuff

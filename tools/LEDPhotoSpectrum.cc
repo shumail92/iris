@@ -3,7 +3,6 @@
 #include <serial.h>
 #include <boost/program_options.hpp>
 #include <data.h>
-
 #include <lpm.h>
 #include <pr655.h>
 
@@ -55,6 +54,8 @@ int main(int argc, char **argv) {
 
         std::map<uint16_t, spectral_data> spectrumData;
 
+        std::ofstream errorOut("data/error.txt");
+
         for(auto elem : ledMap)    {
 
             std::cout << "$: Turning on " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << " with PWM: " << ledPwmMap.at(elem.second) <<std::endl;
@@ -98,10 +99,15 @@ int main(int argc, char **argv) {
                 }
 
                 meter.units(true);
-                meter.measure();
+                bool could_measure = meter.measure();
                 device::pr655::cfg config = meter.config();
                 spectral_data data = meter.spectral();
-                spectrumData.insert( std::pair<uint16_t , spectral_data>(elem.second, data) );
+                if(could_measure) {
+                    spectrumData.insert( std::pair<uint16_t , spectral_data>(elem.second, data) );
+                } else {
+                    std::cout << ">>: Unable to measure spectrum of " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << " with PWM: " << ledPwmMap.at(elem.second) <<std::endl;
+                    errorOut << ">>: Unable to measure spectrum of " << unsigned(elem.second) << "nm LED on pin " << unsigned(elem.first) << " with PWM: " << ledPwmMap.at(elem.second) <<std::endl;
+                }
 
             } catch (const std::exception &e) {
                 std::cerr << e.what() << std::endl;
@@ -134,7 +140,11 @@ int main(int argc, char **argv) {
             spectral_data temp = elem.second;
 
             for (size_t i = 0; i < temp.data.size(); i++) {
-                fout << temp.wl_start + i * temp.wl_step << ",";
+                fout << temp.wl_start + i * temp.wl_step ;
+
+                if(i != (temp.data.size() -1) ) {
+                    fout << ",";
+                }
             }
             break;
         }
@@ -146,12 +156,20 @@ int main(int argc, char **argv) {
             spectral_data temp = elem.second;
 
             for (size_t i = 0; i < temp.data.size(); i++) {
-                fout << temp.data[i] << ",";
+                fout << temp.data[i] ;
+
+                if(i != (temp.data.size() -1) ) {
+                    fout << ",";
+                }
+
             }
 
             fout << std::endl;
 
         }
+
+        errorOut.close();
+        fout.close();
 
     } else {
         std::cout << "Not Enough Arguments. call --help for help" << std::endl;

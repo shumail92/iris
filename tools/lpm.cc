@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     opts.add_options()
             ("help",    "Some help stuff")
             ("device", po::value<std::string>(&device), "device file for aurdrino")
-            ("input", po::value<std::string>(&input), "send r/g/b");
+            ("input", po::value<std::string>(&input), "Specify arduino command (info, pwm, reset, shoot)");
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(opts).run(), vm);

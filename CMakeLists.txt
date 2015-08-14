@@ -108,9 +108,9 @@ set(LEDPhotoSpectrum_SOURCES tools/LEDPhotoSpectrum.cc)
 add_executable(iris-LEDPhotoSpectrum ${LEDPhotoSpectrum_SOURCES})
 target_link_libraries(iris-LEDPhotoSpectrum iris)
 
-set(lpmThresholder_SOURCES tools/thresholder.cc)
-add_executable(iris-lpmThresholder ${lpmThresholder_SOURCES})
-target_link_libraries(iris-lpmThresholder iris)
+set(ledPWMthresholder_SOURCES tools/ledPWMthresholder.cc)
+add_executable(iris-ledPWMthresholder ${ledPWMthresholder_SOURCES})
+target_link_libraries(iris-ledPWMthresholder iris)
 
 set(pr655_SOURCES tools/pr655.cc)
 add_executable(pr655 ${pr655_SOURCES})

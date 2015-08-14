@@ -164,10 +164,10 @@ public:
     // cone fundamentals for calibration
     fs::file cone_fundamentals(size_t spacing = 4) const;
 
-    // the led mapping for the led pseudo monochroma//tor
+    // the led mapping for the led pseudo monochromator
     std::map<uint8_t, uint16_t> lpm_leds() const;
 
-    // the pwm mapping for the led pseudo monochroma//tor
+    // the pwm mapping for the led pseudo monochromator
     std::map<uint16_t, uint16_t> lpm_pwm() const;
 
     // yaml config IO

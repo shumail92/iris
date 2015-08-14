@@ -1,15 +1,19 @@
+/*
+ * LED Pseudo Monochromator tool for communicating with Arduino that itself
+ * has firmware for controlling the attached LEDs; supports different commands
+ */
+
 #include <iostream>
 #include <serial.h>
-
 #include <boost/program_options.hpp>
 #include <data.h>
-
 #include <lpm.h>
 
-// info
-// reset
-// pwm 10,2000
-// shoot
+// Supported commands:
+// info         (for getting information of all LED pins from arduino
+// reset        (for resetting and turning off all LEDs that are on)
+// pwm 10,2000  (Turning on one LED on particular pin with pwm)
+// shoot        (For triggering IR LED to take picture from camera)
 
 int main(int argc, char **argv) {
     namespace po = boost::program_options;
@@ -19,9 +23,9 @@ int main(int argc, char **argv) {
 
     po::options_description opts("LED Pseudo Monochromatic Command Line tool");
     opts.add_options()
-            ("help",    "Some help stuff")
+            ("help",    "Flag for Help")
             ("device", po::value<std::string>(&device), "device file for aurdrino")
-            ("input", po::value<std::string>(&input), "Specify arduino command (info, pwm, reset, shoot)");
+            ("input", po::value<std::string>(&input), "Specify command (info, pwm, reset, shoot)");
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(opts).run(), vm);
@@ -30,6 +34,14 @@ int main(int argc, char **argv) {
     if(vm.count("help")) {
         //show program options
         std::cout << opts << std::endl;
+        std::cout << "Supported Commands:" << std::endl << std::endl;
+
+        std::cout << "info         (for getting information of all LED pins from arduino" << std::endl;
+        std::cout << "reset        (for resetting and turning off all LEDs that are on)" << std::endl;
+        std::cout << "pwm 10,2000  (Turning on one LED on particular pin with pwm)" << std::endl;
+        std::cout << "shoot        (For triggering IR LED to take picture from camera)" << std::endl;
+
+        std::cout << std::endl;
 
     } else if (vm.count("device")) {
 
@@ -38,7 +50,7 @@ int main(int argc, char **argv) {
         device::lpm lpm = device::lpm::open(device);
 
         std::cout << "val of fd: " << lpm.io.printfd() << std::endl;
-        std::cout << "input: " << input << std::endl;
+        std::cout << "user input: " << input << std::endl;
 
         if(lpm.isCommandPWM(input) == 0) {
             // handle PWM

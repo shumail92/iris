@@ -1,3 +1,9 @@
+/*
+ * Tool for automating the process of turning on all available LEDs one by one and
+ * measuring the spectrum of each LED and taking the picture of each using the camera.
+ * -c & -s flags are added to skip spectrum measurement or capturing of photograph
+ */
+
 #include <iostream>
 #include <fstream>
 #include <serial.h>
@@ -69,7 +75,7 @@ int main(int argc, char **argv) {
          */
         const std::map<uint16_t, uint16_t> ledPwmMap = store.lpm_pwm();
 
-        std::cout << "Traversing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
+        std::cout << "Traversing and printing the map; generated from LED PIN & Wavelength YAML Config File: " << std::endl;
         for(auto elem : ledMap)    {
             std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "nm \n";
         }
@@ -188,7 +194,7 @@ int main(int argc, char **argv) {
                         fout << ",";
                     }
                 }
-                break;
+                break;      // just to print top header line in dump file
             }
 
             fout << std::endl;

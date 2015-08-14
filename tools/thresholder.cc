@@ -1,10 +1,13 @@
+/*
+ * Thresholding tool for setting PWM values for all available LEDs such that
+ * their brightness is almost equal (Peaks are almost at same height)
+ */
 #include <iostream>
 #include <fstream>
 #include <serial.h>
 #include <math.h>
 #include <boost/program_options.hpp>
 #include <data.h>
-
 #include <lpm.h>
 #include <pr655.h>
 
@@ -14,21 +17,19 @@ int main(int argc, char **argv) {
 
     std::string arduinoDevFile;
     std::string pr655DevFile;
-    std::string input;
 
-    po::options_description opts("IRIS LED Photo Spectrum Tool");
+    po::options_description opts("IRIS LED PWM Thresholder");
     opts.add_options()
-            ("help",    "Some help stuff")
+            ("help",    "Call --help for help")
             ("arduino", po::value<std::string>(&arduinoDevFile), "Device file for Aurdrino")
-            ("pr655", po::value<std::string>(&pr655DevFile), "Device file for pr655 Spectrometer")
-            ("input", po::value<std::string>(&input), "send <pin no>,<PWM>");
+            ("pr655", po::value<std::string>(&pr655DevFile), "Device file for pr655 Spectrometer");
 
     po::variables_map vm;
     po::store(po::command_line_parser(argc, argv).options(opts).run(), vm);
     po::notify(vm);
 
     if(vm.count("help")) {
-        std::cout << opts << std::endl;
+        std::cout << opts << std::endl << std::endl;
         return 0;
 
     } else if(vm.count("arduino") && vm.count("pr655")) {
@@ -50,7 +51,7 @@ int main(int argc, char **argv) {
             std::cout << "pin: " << unsigned(elem.first) << "  --  Wavelength: " << unsigned(elem.second) << "nm \n";
         }
 
-        std::cout << std::endl << "Starting Process for all available LEDs..." << std::endl << std::endl;
+        std::cout << std::endl << "Starting Thresholding Process for all available LEDs..." << std::endl << std::endl;
 
         std::map<uint16_t, spectral_data> spectrumData;
 
@@ -109,25 +110,19 @@ int main(int argc, char **argv) {
                         device::pr655::cfg config = meter.config();
                         spectral_data data = meter.spectral();
 
-                        std::cout << "1" << std::endl;
-
                         std::vector<float> spectraValues;
-
-                        std::cout << "2" << std::endl;
 
                         for (size_t i = 0; i < data.data.size(); i++) {
                             std::vector<float>::iterator it = spectraValues.begin();
                             spectraValues.insert(it, data.data[i]);
                         }
 
-                        std::cout << "3" << std::endl;
-
                         float maxima = *std::max_element(spectraValues.begin(), spectraValues.end());
                         std::cout << "Peak at: " << maxima << std::endl;
                         float diff = fabs(maxima - threshold);
                         std::cout << "Difference in Threshold and Peak: " << diff << std::endl;
 
-                        if( diff  < 0.000005 || previousPWMVal < 1000) {        // it's ok now
+                        if( diff  < 0.000005 || previousPWMVal < 1000) {        // it's ok now if diff is less than specified value or PWM gets lower than 1000
                             currentLedThresholdFlag = true;
                             led_pin_pwm.insert(std::pair<uint16_t, uint16_t>(elem.second, previousPWMVal));
                             spectrumData.insert( std::pair<uint16_t , spectral_data>(elem.second, data) );
@@ -176,15 +171,19 @@ int main(int argc, char **argv) {
 
         std::ofstream fout("spectral.txt");
 
-        fout << "xx,";
+        fout << "LED,";
 
         for(auto elem : spectrumData)    {
             spectral_data temp = elem.second;
 
             for (size_t i = 0; i < temp.data.size(); i++) {
-                fout << temp.wl_start + i * temp.wl_step << ",";
+                fout << temp.wl_start + i * temp.wl_step ;
+
+                if(i != (temp.data.size() -1) ) {
+                    fout << ",";
+                }
             }
-            break;
+            break;      // just to print top header line in dump file
         }
 
         fout << std::endl;
@@ -194,12 +193,16 @@ int main(int argc, char **argv) {
             spectral_data temp = elem.second;
 
             for (size_t i = 0; i < temp.data.size(); i++) {
-                fout << temp.data[i] << ",";
+                fout << temp.data[i] ;
+
+                if(i != (temp.data.size() -1) ) {
+                    fout << ",";
+                }
             }
-
             fout << std::endl;
-
         }
+
+        fout.close();
 
     } else {
         std::cout << "Not Enough Arguments. call --help for help" << std::endl;
